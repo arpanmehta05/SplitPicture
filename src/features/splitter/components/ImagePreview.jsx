@@ -1,4 +1,4 @@
-import { formatFileSize } from '../utils/pdfProcessor'
+import { formatFileSize } from '../../../lib/pdfProcessor'
 
 /**
  * ImagePreview Component

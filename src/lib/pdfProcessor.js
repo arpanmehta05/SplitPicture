@@ -4,19 +4,16 @@ export const WHITESPACE_SEARCH_RANGE = 80 // Max pixels to search in each direct
 export const WHITE_TOLERANCE = 250 // RGB threshold for "white" (accounts for JPG artifacts)
 export const SINGLE_PAGE_TOLERANCE = 1.2 // 20% tolerance for single page detection
 
+
 export const checkIfSinglePage = (imgWidth, imgHeight) => {
   const imgAspect = imgHeight / imgWidth
-
   const maxPortraitRatio = A4_ASPECT_RATIO * SINGLE_PAGE_TOLERANCE
-
   const isLandscape = imgWidth > imgHeight
   
   if (isLandscape) {
-
     const landscapeRatio = imgWidth / imgHeight
     return landscapeRatio <= (1 / A4_ASPECT_RATIO_LANDSCAPE) * SINGLE_PAGE_TOLERANCE
   } else {
-
     return imgAspect <= maxPortraitRatio
   }
 }
@@ -38,13 +35,11 @@ export const isRowWhitespace = (imageData, rowY, width) => {
   return true
 }
 
-
 export const findSafeCutPoint = (imageData, proposedY, width, height) => {
 
   if (isRowWhitespace(imageData, proposedY, width)) {
     return proposedY
   }
-
   for (let offset = 1; offset <= WHITESPACE_SEARCH_RANGE; offset++) {
     const checkY = proposedY + offset
     if (checkY >= height) break

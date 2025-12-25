@@ -6,7 +6,14 @@ import {
   validateFile, 
   generateOutputFilename,
   checkIfSinglePage
-} from '../utils/pdfProcessor'
+} from '../../../lib/pdfProcessor'
+
+// Workflow stages
+export const STAGES = {
+  UPLOAD: 'upload',
+  EDIT: 'edit',
+  PROCESS: 'process'
+}
 
 /**
  * Custom hook for handling image to PDF processing
@@ -20,9 +27,12 @@ export const useImageProcessor = () => {
   const [error, setError] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
   const [conversionMode, setConversionMode] = useState(null) // 'single' or 'split'
+  const [stage, setStage] = useState(STAGES.UPLOAD) // Current workflow stage
+  const [editedImageUrl, setEditedImageUrl] = useState(null) // Edited image from canvas
   
   const fileInputRef = useRef(null)
   const canvasRef = useRef(null)
+  const editorRef = useRef(null) // Reference to ImageEditor component
 
   /**
    * Single page conversion - for images that fit on one A4 page
@@ -170,6 +180,7 @@ export const useImageProcessor = () => {
 
   /**
    * Main processing function - auto-detects conversion mode
+   * Uses edited image if available, otherwise uses original
    */
   const processImage = async () => {
     if (!imageFile) return
@@ -178,10 +189,12 @@ export const useImageProcessor = () => {
     setError(null)
     setPdfBlob(null)
     setProgress({ current: 0, total: 0, status: 'Loading image...' })
+    setStage(STAGES.PROCESS)
 
     try {
       const img = new Image()
-      img.src = imagePreview
+      // Use edited image if available, otherwise use original preview
+      img.src = editedImageUrl || imagePreview
       
       await new Promise((resolve, reject) => {
         img.onload = resolve
@@ -310,9 +323,45 @@ export const useImageProcessor = () => {
     setError(null)
     setProgress({ current: 0, total: 0, status: '' })
     setConversionMode(null)
+    setStage(STAGES.UPLOAD)
+    setEditedImageUrl(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  /**
+   * Move to edit stage
+   */
+  const startEditing = () => {
+    setStage(STAGES.EDIT)
+  }
+
+  /**
+   * Skip editing and go directly to processing
+   */
+  const skipEditing = () => {
+    setEditedImageUrl(null)
+    processImage()
+  }
+
+  /**
+   * Apply edits from editor and move to ready state
+   */
+  const applyEdits = () => {
+    if (editorRef.current) {
+      const editedUrl = editorRef.current.getEditedImageUrl()
+      setEditedImageUrl(editedUrl)
+    }
+    setStage(STAGES.UPLOAD) // Go back to show preview with "Process" button
+  }
+
+  /**
+   * Cancel editing and return to preview
+   */
+  const cancelEditing = () => {
+    setEditedImageUrl(null)
+    setStage(STAGES.UPLOAD)
   }
 
   /**
@@ -332,10 +381,13 @@ export const useImageProcessor = () => {
     error,
     isDragging,
     conversionMode,
+    stage,
+    editedImageUrl,
     
     // Refs
     fileInputRef,
     canvasRef,
+    editorRef,
     
     // Actions
     processImage,
@@ -343,7 +395,13 @@ export const useImageProcessor = () => {
     downloadPdf,
     reset,
     openFilePicker,
-    dragHandlers
+    dragHandlers,
+    
+    // Stage transitions
+    startEditing,
+    skipEditing,
+    applyEdits,
+    cancelEditing
   }
 }
 

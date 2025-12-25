@@ -122,4 +122,4 @@ const DownloadIcon = () => (
   </svg>
 )
 
-export default ActionButtons 
+export default ActionButtons
